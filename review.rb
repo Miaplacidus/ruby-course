@@ -64,6 +64,7 @@ class ArrayProblems
 
   def self.tell_me_the_weather(array)
     # TODO: Use the map method to create an array of weather descriptions
+    array.map{|i| "It is #{i}"}
   end
 
   # # # # # # #
@@ -72,6 +73,7 @@ class ArrayProblems
 
   def self.list_my_hats(array)
     # TODO: Use the map method to create an array of sized hats
+    array.map{|hat| "#{hat[:size]} #{hat[:style]}"}
   end
 end
 
@@ -83,14 +85,14 @@ class MethodReturns
     #       or not the search_item exists in the array.
     array.each do |elem|
       if elem == search_item
-        true
+        return true
       end
     end
     false
   end
 
   def self.get_name
-    puts "Bob"
+    "Bob"
   end
 
 end
@@ -100,12 +102,12 @@ module Scopes
 
   class Person
     def jump(height)
-      jump_height = height
-      "I can jump #{jump_height} inches!"
+      @jump_height = height
+      "I can jump #{@jump_height} inches!"
     end
 
     def last_jump_height
-      "I last jumped #{jump_height} inches."
+      "I last jumped #{@jump_height} inches."
     end
   end
 
