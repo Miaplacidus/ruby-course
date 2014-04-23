@@ -1,4 +1,4 @@
-require 'singleton'
+# require 'singleton'
 
 module TM
 
@@ -19,7 +19,16 @@ module TM
     def initialize(db_name)
       raise StandardError.new("Please set TM.db_name") if db_name.nil?
 
-      # This creates a connection to our database file
+      # This creates a connection to our database file <-- pre-existing comment
+      # First execute reset_db.rb with a test name that matches
+      # the database name listed in spec_helper.
+      # Notice that a "tm_test.db" is created when you run
+      # the tests. reset_db.rb creates a database with the
+      # same name, which
+      # It seems that the line below does not
+      # overwrite the database, but simply links to the
+      # database with the existing name
+
       @sqlite = SQLite3::Database.new(db_name)
       @projects = {}
       @tasks = {}
@@ -37,10 +46,10 @@ module TM
     #
     # The new, SQL method
     def all_projects
+      # Note that the SELECT command returns an array of arrays; try "print result.class"
       result = @sqlite.execute("SELECT * FROM projects")
-
-      # Here we convert our array of **data arrays** into an array of convenient Project objects.
       # Due to Ruby's implicit returns, the new array gets returned.
+
       result.map do |row|
         # `row` is an array of data. Example: [1, 'My Project Name']
         # You can discover the column order by looking at your table schema
@@ -96,35 +105,57 @@ module TM
     #######################
 
     def all_tasks
-      @tasks.values
+      result = @sqlite.execute("SELECT * FROM tasks")
+
+      result.map do |row|
+        task = TM::Task.new(row[1], row[2], row[3])
+        task
+      end
+      # @tasks.values
     end
 
     def create_task(pid, desc, priority)
       pid = pid.to_i
       priority = priority.to_i
-
-      proj = @projects[pid]
-
       added_task = TM::Task.new(pid, desc, priority)
-
-      @tasks[added_task.id] = added_task
-
+      @sqlite.execute("INSERT INTO tasks (project_id, name, priority) VALUES (?, ?, ?);", pid, desc, priority)
+      added_task.id = @sqlite.execute("SELECT last_insert_rowid()")[0][0]
       added_task
+      # pid = pid.to_i
+      # priority = priority.to_i
+      # proj = @projects[pid]
+      # added_task = TM::Task.new(pid, desc, priority)
+      # @tasks[added_task.id] = added_task
+      # added_task
     end
 
     def get_task(tid)
-      @tasks[tid]
+      # @tasks[tid]
+      tid = tid.to_i
+      rows = @sqlite.execute("SELECT * FROM tasks WHERE id = ?", tid)
+      data = rows.first
+      task = TM::Task.new(data[1], data[2], data[3])
+      task.id = @sqlite.execute("SELECT last_insert_rowid()")[0][0]
+      task
     end
 
     def get_remaining_tasks_for_project(pid)
-      @tasks.values.select {|t| t.project_id == pid }
+      # @tasks.values.select {|t| t.project_id == pid }
+      result = @sqlite.execute("SELECT * FROM tasks WHERE project_id = (?);", pid)
+
+      result.map do |row|
+        task = TM::Task.new(row[1], row[2], row[3])
+        task
+      end
     end
 
     def update_task(tid, attrs)
-      task = @tasks[tid]
-      task.description = attrs[:description] if attrs[:description]
-      task.priority = attrs[:priority] if attrs[:priority]
-      task
+      # task = @tasks[tid]
+      # task.description = attrs[:description] if attrs[:description]
+      @sqlite.execute("UPDATE tasks SET name = (?) WHERE tasks.id = (?);", attrs[:description], tid) if attrs[:description]
+      # task.priority = attrs[:priority] if attrs[:priority]
+      @sqlite.execute("UPDATE tasks SET priority = (?) WHERE tasks.id = (?)", attrs[:priority], tid) if attrs[:priority]
+      task = self.get_task(tid)
     end
 
     ##############################

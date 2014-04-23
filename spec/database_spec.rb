@@ -68,6 +68,7 @@ describe 'DB' do
     it "has persistence for tasks" do
       # This should save to the db
       project = @db.create_project("Testing tasks")
+      puts project.id
       task_1 = @db.create_task(project.id, "Hello", 1)
       task_2 = @db.create_task(project.id, "World", 2)
 
